@@ -1,15 +1,2 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<svg baseProfile="full" height="250px" version="1.1" width="400px" xmlns="http://www.w3.org/2000/svg"
-     xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <defs>
-        <clipPath id="border_clip">
-            <rect height="250" width="400" x="0" y="0"/>
-        </clipPath>
-    </defs>
-    <polyline clip-path="url(#border_clip)" fill="none" points="200.5,125.5 210.5,115.5" stroke="black"
-              stroke-linecap="round" stroke-width="1"/>
-    <polyline clip-path="url(#border_clip)" fill="none" points="210.5,115.5 210.5,115.5" stroke="black"
-              stroke-linecap="round" stroke-width="15"/>
-    <polyline clip-path="url(#border_clip)" fill="none" points="200.5,125.5 200.5,125.5" stroke="black"
-              stroke-linecap="round" stroke-width="10"/>
-</svg>
+<svg baseProfile="full" height="250px" version="1.1" width="400px" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><clipPath id="border_clip"><rect height="250" width="400" x="0" y="0" /></clipPath></defs><polyline clip-path="url(#border_clip)" fill="none" points="200.5,125.5 200.5,115.5 210.5,115.5 210.5,125.5 200.5,125.5 300.5,125.5 300.5,95.5 330.5,95.5 330.5,125.5 300.5,125.5 220.5,93.5 220.5,43.5 270.5,43.5 270.5,93.5 220.5,93.5 220.5,66.5 247.5,66.5 247.5,93.5 220.5,93.5" stroke="#00ffff" stroke-linecap="round" stroke-width="1" /></svg>
