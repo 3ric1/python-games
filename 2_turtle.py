@@ -153,10 +153,19 @@ class Rectangle(Drawable):
         self.alex.goto(self.x, self.y)
         # desenam cele 4 linii
         self.alex.pendown()
-        self.alex.goto(self.x, self.y + self.height)
-        self.alex.goto(self.x + self.width, self.y + self.height)
-        self.alex.goto(self.x + self.width, self.y)
-        self.alex.goto(self.x, self.y)
+
+        A,B,C,D = (self.x, self.y + self.height), (self.x + self.width, self.y + self.height), \
+                  (self.x + self.width, self.y), (self.x, self.y)
+
+        A_rotated = rotate((self.x, self.y), A, self.angle)
+        B_rotated = rotate((self.x, self.y), B, self.angle)
+        C_rotated = rotate((self.x, self.y), C, self.angle)
+        D_rotated = rotate((self.x, self.y), D, self.angle)
+
+        self.alex.goto(*A_rotated)
+        self.alex.goto(*B_rotated)
+        self.alex.goto(*C_rotated)
+        self.alex.goto(*D_rotated)
         self.alex.penup()
 
     def movex(self, x):
@@ -504,6 +513,23 @@ rect1_delay = 200
 
 # Dupa aceea vom crea un mini engine, care animeaza pentru noi cercurile
 
+import math
+
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in hexadecimal degrees.
+    """
+    ox, oy = origin
+    px, py = point
+
+    angle = math.radians(angle)
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
+
 class AnimationEngine:
     # va contine o lista cu obiecte care vor fi animate, o lista cu functiile folosite la update,
     #  dar si FPS
@@ -766,4 +792,52 @@ class CircleSquare(Drawable):
 #     )
 #     engine.mainloop()
 
+class Maze(Drawable):
+    def __init__(self, pos: Tuple[int, int], elems: List[Drawable]):
+        super().__init__(pos)
+        self.elems = elems
 
+    def draw(self):
+        for elem in self.elems:
+            elem.draw()
+
+    def clear(self):
+        for elem in self.elems:
+            elem.clear()
+
+    def update(self):
+        # show the updated canvas
+        update()  # update the screen
+
+    def set_angle(self, angle):
+        for elem in self.elems:
+            elem.angle = angle
+
+
+if __name__ == '__main__':
+    maze = Maze((0, 0), [
+        Rectangle((0, 0), 100, 10, 0),
+        Rectangle((0, 0), 10, 100, 0),
+        Rectangle((90, 0), 10, 100, 0),
+        Rectangle((0, 90), 100, 10, 0),
+    ])
+
+    tracer(0, 0)  # elimin
+
+    angle = 0
+    while angle < 1000:
+        # apelezi clear pentru fiecare element
+        maze.clear()
+
+        # # updatezi pozitia elementelor
+        angle += 1
+        maze.set_angle(angle)
+
+        # redesenezi elementele
+        maze.draw()
+
+        # urmatoarele 2 randuri nu trebuie modificate
+        time.sleep(1 / 5)
+        maze.update()
+
+    mainloop()
