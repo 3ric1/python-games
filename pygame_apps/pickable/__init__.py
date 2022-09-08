@@ -31,6 +31,14 @@ class Positionable:
     def __init__(self, pos: Pair):
         self.x, self.y = pos
 
+    @property
+    def pos(self):
+        return self.x, self.y
+
+    @pos.setter
+    def pos(self, pos: Pair):
+        self.x, self.y = pos
+
 
 class Pickable(Positionable):
     def __init__(self, pos: Pair, texture: SpriteAnimation):
@@ -50,12 +58,6 @@ class SimpleSprite:
 
     def get(self, row: int, col: int) -> pygame.Surface:
         text = pygame.surface.Surface((self.img_width, self.img_height), flags=pygame.SRCALPHA)
-        print((
-            col * self.img_width,
-            row * self.img_height,
-            self.img_width,
-            self.img_height
-        ))
         text.blit(
             self.sprite,
             Coords(0, 0),
@@ -118,7 +120,7 @@ class StatefulEntity(Positionable, Stateful):
         dt = time.time() - self.t  # !!! seconds
         frames_since = math.floor(dt * self.nominal_anim_fps)
 
-        print(dt, frames_since)
+        # print(dt, frames_since)
         curr_state = self.states[self.state_index]
         self.frame_index = frames_since % self.anim_sprite.frame_count(
             curr_state
@@ -138,17 +140,22 @@ if __name__ == '__main__':
     dog_sprite = pygame.image.load('../maze/assets/Dog_medium.png').convert_alpha()
     dog_entity = StatefulEntity(
         (0, 0),
-        ['Bark', 'Walk', 'Run', 'Sit Transition', 'Idle Sit', 'Idle Stand'],
+        ['Bark', 'Walk', 'Run', 'Sit', 'Get Up', 'Idle Sit', 'Idle Stand'],
         5,  # so the image changes 10 times per second, no matter the state
         #       maybe we should set it for each frame, optionally?
         dog_sprite, (60, 38), {'Bark': 4,
                                'Walk': 6,
                                'Run': 5,
-                               'Sit Transition': 3,
+                               'Sit': 3,
+                               'Get Up': 3,
                                'Idle Sit': 4,
                                'Idle Stand': 4, }
     )
-    dog_entity.update_state(4)
+    dog_entity.update_state(3)
+    dog_entity.pos = 50, 80
+
+    # use time passed for moving the dog using one different animations (sit, get up, walk, run)
+    t = time.time()
 
     clock = pygame.time.Clock()
     while True:
@@ -164,20 +171,30 @@ if __name__ == '__main__':
             elif event.type == QUIT:
                 quit()
 
-        dtime = clock.tick(5)
+        dtime = clock.tick(5) / 1000
 
         screen.fill(Colors.PINE)
 
-        # # the new frame:
-        # coin = ui_sprite.get(0, 0)
-        # coin2 = ui_sprite.get(0, 1)
-        #
-        # # screen.blit(coin, Coords(0, 0))
-        # screen.blit(coin2, Coords(0, 0))
-        # pygame.draw.circle(screen, (255, 0, 0), (100, 100), 15)
+        coin = ui_sprite.get(0, 0)
+        coin = pygame.transform.scale(coin, (30, 30))
+        screen.blit(coin, Coords(500, 85))
 
         dog = dog_entity.curr_texture
         dog = pygame.transform.flip(dog, flip_x=True, flip_y=False)
-        screen.blit(dog, Coords(0, 0))
+
+        dt = time.time() - t
+        print(dt, dtime)
+        if dt < .3:
+            dog_entity.update_state('Get Up')
+            dog_entity.x += dtime * 20
+        elif dt < 4:
+            dog_entity.update_state('Run')
+            dog_entity.x += dtime * 80
+        elif dt < 7:
+            dog_entity.update_state('Walk')
+            dog_entity.x += dtime * 50
+
+
+        screen.blit(dog, Coords(*dog_entity.pos))
 
         pygame.display.flip()
