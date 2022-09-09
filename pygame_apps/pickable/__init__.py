@@ -22,8 +22,8 @@ Quad = Tuple[Number, Number, Number, Number]
 
 
 # trick #2
-def Coords(x: int, y: int) -> pygame.rect.Rect:
-    return pygame.rect.Rect(x, y, 0, 0)
+def Coords(x: int, y: int, w: int = 0, h: int = 0) -> pygame.rect.Rect:
+    return pygame.rect.Rect(x, y, w, h)
 
 
 class Positionable:
@@ -140,32 +140,56 @@ class Background:
     def __init__(self, text: pygame.Surface, out_size: Pair, unit_size: Pair = None):
         if unit_size:
             self.text = pygame.transform.scale(text, unit_size)
+            self.unit_size = unit_size
         else:
             self.text = text
+            self.unit_size = self.text.get_size()
 
         self.txt_size = self.text.get_size()
         self.out_size = out_size
 
     def get_bg(self) -> pygame.Surface:
-        bg_text = pygame.Surface(self.out_size).convert_alpha()
+        bg_text = pygame.Surface(self.out_size, flags=pygame.SRCALPHA)
         w, h = self.txt_size
         out_w, out_h = self.out_size
         rows, cols = math.ceil(out_h / h), math.ceil(out_w / w)
-        for i in range(0, rows):
-            for j in range(0, cols):
-                bg_text.blit(self.text, Coords(i * w, j * h))
+        for i in range(0, cols):
+            for j in range(0, rows):
+                bg_text.blit(self.text, Coords(i * w, j * h, *self.unit_size))
         return bg_text
 
 
 class Terrain:
-    """Input a texture for most of the platform, and a different texture for the top "top_height" pixels """
-    pass
+    """Input a texture for most of the platform, and a different texture for the top "top_height" pixels
+
+    it has a function which outputs a terrain of given size
+
+    """
+
+    def __init__(self, main_text: pygame.Surface, top_text: pygame.Surface,
+                 top_height: int, unit_size: Pair):
+        self.main_text = main_text
+        self.top_text = top_text
+        self.top_height = top_height
+        self.unit_size = unit_size
+
+    def create(self, size: Pair):
+        bottom_size = (size[0], size[1] - self.top_height)
+        bottom = Background(self.main_text, bottom_size, self.unit_size).get_bg()
+
+        top_size = (size[0], self.top_height)
+        top = Background(self.top_text, top_size, self.unit_size).get_bg()
+
+        surf = pygame.Surface(size, flags=pygame.SRCALPHA)
+        surf.blit(top, Coords(0, 0))
+        surf.blit(bottom, Coords(0, self.top_height))
+
+        return surf
 
 
 """
 TODO collisions
 """
-
 
 if __name__ == '__main__':
     pygame.init()
@@ -192,9 +216,14 @@ if __name__ == '__main__':
     dog_entity.update_state(3)
     dog_entity.pos = 50, 80
 
-    #
-    text_bg = pygame.image.load('../maze/assets/128x128/Grass/Grass_07-128x128.png').convert_alpha()
+    # background
+    text_bg = pygame.image.load('../maze/assets/128x128/Tile/Tile_01-128x128.png').convert_alpha()
     bg = Background(text_bg, (600, 200), (50, 50)).get_bg()
+    bg.set_alpha(70)
+    # terrain
+    surf_bottom = pygame.image.load('../maze/assets/128x128/Grass/Grass_06-128x128.png')
+    surf_top = pygame.image.load('../maze/assets/128x128/Bricks/Bricks_18-128x128.png')
+    terrain = Terrain(surf_bottom, surf_top, 20, (40, 40)).create((550, 100))
 
     # use time passed for moving the dog using one different animations (sit, get up, walk, run)
     t = time.time()
@@ -215,9 +244,11 @@ if __name__ == '__main__':
 
         dtime = clock.tick(5) / 1000
 
-        screen.fill(Colors.PINE)
+        screen.fill(Colors.BLACK)
         # BG:
         screen.blit(bg, Coords(0, 0))
+        # TERRAING
+        screen.blit(terrain, Coords(0, 115))
 
         coin = ui_sprite.get(0, 0)
         coin = pygame.transform.scale(coin, (30, 30))
@@ -237,6 +268,11 @@ if __name__ == '__main__':
         elif dt < 7:
             dog_entity.update_state('Walk')
             dog_entity.x += dtime * 50
+        elif dt < 7.5:
+            dog_entity.update_state('Sit')
+            dog_entity.x += dtime * 10
+        else:
+            dog_entity.update_state('Idle Sit')
 
         screen.blit(dog, Coords(*dog_entity.pos))
 
