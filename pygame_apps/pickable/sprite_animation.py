@@ -31,4 +31,4 @@ class SpriteAnimation:
         return surf
 
     def frame_count(self, state):
-        return self.frame_count_dict.get(state, 0)
+        return self.frame_count_dict.get(state, -1)

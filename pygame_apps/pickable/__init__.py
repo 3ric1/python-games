@@ -129,6 +129,44 @@ class StatefulEntity(Positionable, Stateful):
         return self.anim_sprite.at(self.states[self.state_index], self.frame_index)
 
 
+# next time: physics such as falling, and player controls, so we also need platforms and collisions today
+# today we may also do a pickable? Or next time?
+
+
+# TODO use caching
+class Background:
+    """input a texture and repeat if for the given size"""
+
+    def __init__(self, text: pygame.Surface, out_size: Pair, unit_size: Pair = None):
+        if unit_size:
+            self.text = pygame.transform.scale(text, unit_size)
+        else:
+            self.text = text
+
+        self.txt_size = self.text.get_size()
+        self.out_size = out_size
+
+    def get_bg(self) -> pygame.Surface:
+        bg_text = pygame.Surface(self.out_size).convert_alpha()
+        w, h = self.txt_size
+        out_w, out_h = self.out_size
+        rows, cols = math.ceil(out_h / h), math.ceil(out_w / w)
+        for i in range(0, rows):
+            for j in range(0, cols):
+                bg_text.blit(self.text, Coords(i * w, j * h))
+        return bg_text
+
+
+class Terrain:
+    """Input a texture for most of the platform, and a different texture for the top "top_height" pixels """
+    pass
+
+
+"""
+TODO collisions
+"""
+
+
 if __name__ == '__main__':
     pygame.init()
     screen = pygame.display.set_mode((600, 200), flags=pygame.SRCALPHA)
@@ -154,6 +192,10 @@ if __name__ == '__main__':
     dog_entity.update_state(3)
     dog_entity.pos = 50, 80
 
+    #
+    text_bg = pygame.image.load('../maze/assets/128x128/Grass/Grass_07-128x128.png').convert_alpha()
+    bg = Background(text_bg, (600, 200), (50, 50)).get_bg()
+
     # use time passed for moving the dog using one different animations (sit, get up, walk, run)
     t = time.time()
 
@@ -174,6 +216,8 @@ if __name__ == '__main__':
         dtime = clock.tick(5) / 1000
 
         screen.fill(Colors.PINE)
+        # BG:
+        screen.blit(bg, Coords(0, 0))
 
         coin = ui_sprite.get(0, 0)
         coin = pygame.transform.scale(coin, (30, 30))
@@ -193,7 +237,6 @@ if __name__ == '__main__':
         elif dt < 7:
             dog_entity.update_state('Walk')
             dog_entity.x += dtime * 50
-
 
         screen.blit(dog, Coords(*dog_entity.pos))
 
