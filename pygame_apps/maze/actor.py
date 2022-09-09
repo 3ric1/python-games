@@ -1,6 +1,6 @@
 import time
 
-from pygame_apps.maze.sprite_animation import SpriteAnimation
+from pygame_apps.sprite_animation import SpriteAnimation
 
 
 class Actor:

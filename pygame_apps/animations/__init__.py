@@ -55,7 +55,9 @@ x, y = 50, 0
 height = 0
 max_height = 150
 
-height_fn = easing_functions.BounceEaseIn(start=0, end=max_height, duration=5)
+height_fn = easing_functions.BounceEaseIn(start=0, end=max_height, duration=5)   # ease in
+# height_fn = easing_functions.BounceEaseIn(start=max_height, end=0, duration=5)   # ease Out
+# height_fn = easing_functions.BounceEaseIn(start=-2, end=max_height, duration=5)   # ease inBack
 init_time = time.time()
 
 while True:
@@ -75,6 +77,7 @@ while True:
 
     screen.fill((0, 0, 0))
     pygame.draw.circle(screen, (255, 0, 0), (x, 100 - y), 20)
+    pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 115, 1000, 100))   # the grass for the ball to bounce on
 
     pygame.display.flip()
 

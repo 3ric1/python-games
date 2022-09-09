@@ -4,34 +4,22 @@ Objective: create a class named Pickable and a class named Positionable, this cl
 import time
 import math
 
-import pygame
-import easing_functions as ease  # TODO write inside the README.md
-from typing import Tuple, Union, List
+from typing import List
 
 from pygame import KEYDOWN, K_ESCAPE
 from pygame.constants import QUIT
 
-from pygame_apps.pickable.sprite_animation import SpriteAnimation
+from pygame_apps.sprite_animation import SpriteAnimation
 from pygame_apps.pickable.colors import Colors
 
-# trick #1
-Number = Union[int, float]
-Pair = Tuple[Number, Number]
-Triple = Tuple[Number, Number, Number]
-Quad = Tuple[Number, Number, Number, Number]
-
-
-# trick #2
-def Coords(x: int, y: int, w: int = 0, h: int = 0) -> pygame.rect.Rect:
-    return pygame.rect.Rect(x, y, w, h)
-
+from pygame_apps.custom_types import *
 
 class Positionable:
 
     def __init__(self, pos: Pair):
         self.x, self.y = pos
 
-    @property
+    @property  # @keyword    it's called decoration, so we decorate a function
     def pos(self):
         return self.x, self.y
 
@@ -135,7 +123,7 @@ class StatefulEntity(Positionable, Stateful):
 
 # TODO use caching
 class Background:
-    """input a texture and repeat if for the given size"""
+    """input a texture and repeat it for the given size"""
 
     def __init__(self, text: pygame.Surface, out_size: Pair, unit_size: Pair = None):
         if unit_size:
@@ -195,6 +183,8 @@ if __name__ == '__main__':
     pygame.init()
     screen = pygame.display.set_mode((600, 200), flags=pygame.SRCALPHA)
 
+    GAME_FPS = 9
+
     # create textures and other actors/entities..
     text_ui_icons = pygame.image.load('../maze/assets/ui_icons.png').convert_alpha()
     ui_sprite = SimpleSprite(500, 500, text_ui_icons, convert_to=(50, 50))
@@ -203,7 +193,7 @@ if __name__ == '__main__':
     dog_entity = StatefulEntity(
         (0, 0),
         ['Bark', 'Walk', 'Run', 'Sit', 'Get Up', 'Idle Sit', 'Idle Stand'],
-        5,  # so the image changes 10 times per second, no matter the state
+        9,  # so the image changes 10 times per second, no matter the state
         #       maybe we should set it for each frame, optionally?
         dog_sprite, (60, 38), {'Bark': 4,
                                'Walk': 6,
@@ -242,7 +232,7 @@ if __name__ == '__main__':
             elif event.type == QUIT:
                 quit()
 
-        dtime = clock.tick(5) / 1000
+        dtime = clock.tick(GAME_FPS) / 1000
 
         screen.fill(Colors.BLACK)
         # BG:

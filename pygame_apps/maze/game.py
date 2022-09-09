@@ -104,7 +104,7 @@ bird.set_state('Fly')
 
 # load the ui icons sprite
 ui_sprite = pygame.image.load('assets/ui_icons.png')
-ui_sprite = Sprite(ui_sprite, )
+# ui_sprite = Sprite(ui_sprite, )
 
 while True:
     dtime = clock.tick(fps) / 1000
