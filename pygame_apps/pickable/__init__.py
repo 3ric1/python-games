@@ -14,6 +14,7 @@ from pygame_apps.pickable.colors import Colors
 
 from pygame_apps.custom_types import *
 
+
 class Positionable:
 
     def __init__(self, pos: Pair):
@@ -80,6 +81,10 @@ class Stateful:
             if i == -1:
                 i = 0
             self.state_index = i
+
+    @property
+    def curr_state(self):
+        return self.states[self.state_index]
 
 
 class StatefulEntity(Positionable, Stateful):

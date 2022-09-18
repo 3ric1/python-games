@@ -1,6 +1,6 @@
 
 # trick #2
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 import pygame
 
