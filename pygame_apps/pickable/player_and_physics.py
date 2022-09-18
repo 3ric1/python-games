@@ -20,19 +20,39 @@ I.e. the object's texture will gradually minimize until it reaches the character
 # there are two ways: get events from pygame directly, or create a function towards
 #  which YOU MUST pass the events
 
-from pygame.constants import K_UP, K_DOWN, K_LEFT, K_RIGHT
+from pygame.constants import K_UP, K_DOWN, K_LEFT, K_RIGHT, K_SPACE
 
-ARROW_KEYS = {K_LEFT, K_RIGHT}  # , K_UP, K_DOWN}
+MOVEMENT_KEYS = {K_LEFT, K_RIGHT, K_SPACE}  # , K_UP, K_DOWN}
+
+
+class Physics:
+    g = 9.81
+
+    @classmethod
+    def falling_speed(cls, falling_time: float) -> float:
+        return cls.g * falling_time * 50
+
+
+class World:
+    platforms = []
+
+    @classmethod
+    def is_player_falling(cls, player: 'Player'):
+        for platform in cls.platforms:
+            if player.bbox_rect.colliderect(platform):
+                return False
+        return True
 
 
 class Player(StatefulEntity):
-    NECESSARY_STATES = ['Idle Stand', 'Walk']
+    NECESSARY_STATES = ['Idle Stand',
+                        'Walk']  # TODO requirements for creating a player: the aprite animation it uses should contains animations named IdelStand and Walk
 
     def __init__(self,
                  pos: Pair,
                  states: List[str], nominal_anim_fps: int,
                  sprite: pygame.Surface, size: Pair, frame_count_dict: dict,
-                 speed: Pair = (0, 50), direction: Pair = (0, 0),
+                 speed: List[float], direction: List[float],
                  **kwargs
                  ):
         StatefulEntity.__init__(self,
@@ -42,10 +62,14 @@ class Player(StatefulEntity):
                                 # no extra
                                 **kwargs)
         self.speed = speed
+        self.speed[1] = 0
         self.MAX_SPEED = 50
         self.direction = direction  # RIGHT SIDE
         # nor parameters:
-        self.pressed_keys = set()
+        self.pressed_keys = set()  # s.add()  s.remove()     K_DOWN in s
+
+        self.t_jump = None
+        self.t_fall = None
 
     @property
     def flip_x(self):
@@ -54,7 +78,7 @@ class Player(StatefulEntity):
     @property
     def bbox_rect(self) -> pygame.rect.Rect:
         w, h = self.curr_texture.get_width(), self.curr_texture.get_height()
-        return pygame.rect.Rect(*self.pos, w, h)
+        return pygame.rect.Rect(self.pos[0], self.pos[1] + 1, w, h)
 
     @property
     def curr_texture(self) -> pygame.Surface:
@@ -65,19 +89,41 @@ class Player(StatefulEntity):
     def handle_events(self, events: List[pygame.event.Event]):
         for event in events:
             # update speed and direction
-            if event.type == pygame.constants.KEYDOWN and event.key in ARROW_KEYS:
+            if event.type == pygame.constants.KEYDOWN and event.key in MOVEMENT_KEYS:
                 self.pressed_keys.add(event.key)
-            elif event.type == pygame.constants.KEYUP and event.key in ARROW_KEYS:
+                if event.key == K_SPACE:
+                    # nu poate sa sara daca este in aer deoarece cade, sau daca deja a sarit
+                    if self.t_jump is None and self.t_fall is None:
+                        print('JUMP')
+                        self.t_jump = time.time()
+                        self.t_fall = time.time()
+                        self.direction[1] = -1  # upwards
+            elif event.type == pygame.constants.KEYUP and event.key in MOVEMENT_KEYS:
                 self.pressed_keys.remove(event.key)
+
+        # based on the jump time, update the vertical speed
+        JUMP_SPEED = 50
+        if self.t_jump is not None:
+            dt_jump = time.time() - self.t_jump
+            # print('DT JUMP:', dt_jump)
+            if 1 > dt_jump >= 0:
+                self.speed[1] = JUMP_SPEED * (dt_jump / 1)  # int c =  (a>b) ? a : b;
+            elif 2 > dt_jump > 1:
+                self.speed[1] = JUMP_SPEED - (JUMP_SPEED * ((dt_jump - 1) / (2 - 1)))
+                # folosim numarul de secunde din 1,2)  /   cate secunde au trecut de la secunda 1
+            else:
+                self.speed[1] = 0
+                self.direction[1] = 0
+                self.t_jump = None
 
         # change current direction
 
         if K_RIGHT in self.pressed_keys:
-            self.direction = (1, self.direction[1])
+            self.direction[0] = 1
         elif K_LEFT in self.pressed_keys:
-            self.direction = (-1, self.direction[1])
+            self.direction[0] = -1
         elif K_RIGHT not in self.pressed_keys and K_LEFT not in self.pressed_keys:
-            self.direction = (self.direction[0] / 1000, self.direction[1])
+            self.direction[0] /= 1000
 
         # the texture will flip when the direction changes
 
@@ -97,17 +143,26 @@ class Player(StatefulEntity):
                                        'Idle Stand': 4, },
         '''
 
-        print(self.direction, self.pressed_keys)
+        # print(self.direction, self.pressed_keys)
 
     def update_position(self, dt: float):
         """
         Use current position, orientation and speed to compute the next position
         :return:
         """
-        self.pos = (
-            self.pos[0] + dt * self.direction[0] * self.speed[0],
-            self.pos[1] + dt * self.direction[1] * self.speed[1]
-        )
+        # based on fall time
+
+        if World.is_player_falling(self):
+            print('FALLING')
+            if self.t_fall is None:
+                self.t_fall = time.time()
+            falling_speed = Physics.falling_speed(falling_time=time.time() - self.t_fall)
+        else:
+            falling_speed = 0
+
+        self.pos[0] += dt * self.direction[0] * self.speed[0]
+        print('DIR, SPEED, FALL:', self.direction[1], self.speed[1], falling_speed)
+        self.pos[1] += dt * self.direction[1] * (self.speed[1] - falling_speed)
 
 
 if __name__ == '__main__':
@@ -142,10 +197,10 @@ if __name__ == '__main__':
                                'Get Up': 3,
                                'Idle Sit': 4,
                                'Idle Stand': 4, },
-        (120, 0)
+        [120, 50], [0, 0]
     )
     player.update_state(3)
-    player.pos = 50, 80
+    player.pos = [50, 80]
 
     # # background
     # text_bg = pygame.image.load('../maze/assets/128x128/Tile/Tile_01-128x128.png').convert_alpha()
@@ -158,6 +213,7 @@ if __name__ == '__main__':
 
     # use time passed for moving the dog using one different animations (sit, get up, walk, run)
     t = time.time()
+    falling_time = time.time()
 
     clock = pygame.time.Clock()
     while True:
@@ -169,7 +225,7 @@ if __name__ == '__main__':
 
         # handle the key events
         player.handle_events(events)
-        # and adapt the speed and position
+        # and update the speed and position on the screen
         player.update_position(dtime)
 
         screen.fill(Colors.BLACK)
@@ -199,17 +255,14 @@ if __name__ == '__main__':
         # else:
         #     dog_entity.update_state('Idle Sit')
 
-        # TODO physics for platforms:
-        print(dtime, player.speed[1])
-        player.pos = (player.pos[0], player.pos[1] + dtime * player.speed[1])
-
-        rect1 = pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(50, 120, 50, 50))
-        rect2 = pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(100, 140, 50, 50))
-        if player.bbox_rect.colliderect(rect1):
-            player.pos = player.pos[0], rect1.y - player.bbox_rect.height
-        elif player.bbox_rect.colliderect(rect2):
-            player.pos = player.pos[0], rect2.y - player.bbox_rect.height
-
+        # compute the vertical speed
+        World.platforms = [
+            # player-ul trebuie sa cunoasca toate platformele din jurul lui ca sa stie daca inca este in cadere :)
+            pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(50, 120, 50, 50)),
+            pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(100, 170, 50, 50)),
+            pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(150, 120, 50, 50)),
+            pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(200, 70, 50, 50)),
+        ]
         # draw player:
 
         dog = player.curr_texture

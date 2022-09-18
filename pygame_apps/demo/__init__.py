@@ -193,7 +193,7 @@ class SimpleSprite:
 
 if __name__ == '__main__':
     pygame.init()
-    screen = pygame.display.set_mode((600, 200), flags=pygame.SRCALPHA)
+    screen = pygame.display.set_mode((1000, 600), flags=pygame.SRCALPHA)
 
     GAME_FPS = 9
 
@@ -283,6 +283,15 @@ if __name__ == '__main__':
                 dog_entity.update_state('Idle Sit')
 
         screen.blit(dog, Coords(*dog_entity.pos))
+
+        surface = pygame.display.set_mode((400, 300))
+
+        # Initialing Color
+        color = (255, 0, 0)
+
+        # Drawing Rectangle
+        pygame.draw.rect(surface, color, pygame.Rect(0, 250, 800, 50))
+        pygame.display.flip()
 
         pygame.display.flip()
 

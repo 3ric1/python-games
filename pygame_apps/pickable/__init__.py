@@ -17,20 +17,13 @@ from pygame_apps.custom_types import *
 
 class Positionable:
 
-    def __init__(self, pos: Pair):
+    def __init__(self, pos: List[float]):
         self.x, self.y = pos
-
-    @property  # @keyword    it's called decoration, so we decorate a function
-    def pos(self):
-        return self.x, self.y
-
-    @pos.setter
-    def pos(self, pos: Pair):
-        self.x, self.y = pos
+        self.pos = pos
 
 
 class Pickable(Positionable):
-    def __init__(self, pos: Pair, texture: SpriteAnimation):
+    def __init__(self, pos: List[float], texture: SpriteAnimation):
         self.pos = pos
         self.texture = texture
 
