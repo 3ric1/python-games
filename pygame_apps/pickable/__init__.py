@@ -18,8 +18,20 @@ from pygame_apps.custom_types import *
 class Positionable:
 
     def __init__(self, pos: List[float]):
-        self.x, self.y = pos
         self.pos = pos
+
+    @property
+    def x(self):
+        return self.pos[0]
+    @property
+    def y(self):
+        return self.pos[1]
+    @x.setter
+    def x(self, x):
+        self.pos[0] = x
+    @y.setter
+    def y(self, y):
+        self.pos[1] = y
 
 
 class Pickable(Positionable):

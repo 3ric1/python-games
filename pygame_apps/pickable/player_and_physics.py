@@ -1,3 +1,5 @@
+from itertools import product
+
 import pygame.event
 
 from pygame_apps.pickable import Positionable, Pickable, Stateful, StatefulEntity, SimpleSprite, SpriteAnimation
@@ -30,17 +32,27 @@ class Physics:
 
     @classmethod
     def falling_speed(cls, falling_time: float) -> float:
-        return cls.g * falling_time * 50
+        return cls.g * falling_time * 20  # to fall two blocks per second
+        # return cls.g * falling_time * 50
 
 
 class World:
-    platforms = []
+    platforms: List[pygame.rect.Rect] = []
 
     @classmethod
     def is_player_falling(cls, player: 'Player'):
         for platform in cls.platforms:
             if player.bbox_rect.colliderect(platform):
+                print('collide')
+                player.y = platform.y - player.bbox_rect.height
+                if player.t_fall:
+                    player.t_fall = None
+                    print('STOP FALLING')
                 return False
+
+        if player.t_fall is None:
+            player.t_fall = time.time()
+        print(f'FALLING -- dt={time.time() - player.t_fall}')
         return True
 
 
@@ -78,7 +90,8 @@ class Player(StatefulEntity):
     @property
     def bbox_rect(self) -> pygame.rect.Rect:
         w, h = self.curr_texture.get_width(), self.curr_texture.get_height()
-        return pygame.rect.Rect(self.pos[0], self.pos[1] + 1, w, h)
+        # TODO flip the bbox inside the texture box
+        return pygame.rect.Rect(self.pos[0] + 7, self.pos[1] + 5, w - 14, h - 5)
 
     @property
     def curr_texture(self) -> pygame.Surface:
@@ -102,15 +115,16 @@ class Player(StatefulEntity):
                 self.pressed_keys.remove(event.key)
 
         # based on the jump time, update the vertical speed
-        JUMP_SPEED = 50
+        JUMP_SPEED = 100
         if self.t_jump is not None:
             dt_jump = time.time() - self.t_jump
             # print('DT JUMP:', dt_jump)
             if 1 > dt_jump >= 0:
-                self.speed[1] = JUMP_SPEED * (dt_jump / 1)  # int c =  (a>b) ? a : b;
+                self.speed[1] = JUMP_SPEED + JUMP_SPEED * (dt_jump / 1)  # int c =  (a>b) ? a : b;
             elif 2 > dt_jump > 1:
-                self.speed[1] = JUMP_SPEED - (JUMP_SPEED * ((dt_jump - 1) / (2 - 1)))
-                # folosim numarul de secunde din 1,2)  /   cate secunde au trecut de la secunda 1
+                self.speed[1] = 0
+                # self.speed[1] = JUMP_SPEED - (JUMP_SPEED * ((dt_jump - 1) / (2 - 1)))
+                # # folosim numarul de secunde din 1,2)  /   cate secunde au trecut de la secunda 1
             else:
                 self.speed[1] = 0
                 self.direction[1] = 0
@@ -153,16 +167,16 @@ class Player(StatefulEntity):
         # based on fall time
 
         if World.is_player_falling(self):
-            print('FALLING')
-            if self.t_fall is None:
-                self.t_fall = time.time()
             falling_speed = Physics.falling_speed(falling_time=time.time() - self.t_fall)
         else:
+            self.t_fall = None
+            print("STOP FALLING", self.t_fall)
+
             falling_speed = 0
 
         self.pos[0] += dt * self.direction[0] * self.speed[0]
-        print('DIR, SPEED, FALL:', self.direction[1], self.speed[1], falling_speed)
-        self.pos[1] += dt * self.direction[1] * (self.speed[1] - falling_speed)
+        self.pos[1] += dt * (- self.speed[1] + falling_speed)  # TODO don't use self.direction
+        print(f'xy={self.pos}, dir={self.direction}, SPEED={self.speed}, fall_speed={falling_speed}')
 
 
 if __name__ == '__main__':
@@ -266,7 +280,15 @@ if __name__ == '__main__':
         # draw player:
 
         dog = player.curr_texture
+        # draw dog
         dog = pygame.transform.flip(dog, flip_x=True, flip_y=False)
         screen.blit(dog, Coords(*player.pos))
+        # draw bounding box around the dog:
+        bbox = player.bbox_rect
+        bbox_surf = pygame.surface.Surface((bbox.width, bbox.height), flags=pygame.SRCALPHA)
+        for i, j in product(range(bbox.height), range(bbox.width)):
+            if i in {0, bbox.height - 1} or j in {0, bbox.width - 1}:
+                bbox_surf.set_at((i, j), (255, 0, 0, 125))
+        screen.blit(bbox_surf, player.bbox_rect)
 
         pygame.display.flip()
