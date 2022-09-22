@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     dog_sprite = pygame.image.load('../maze/assets/Dog_medium.png').convert_alpha()
     dog_entity = StatefulEntity(
-        (0, 0),
+        [0, 0],
         ['Bark', 'Walk', 'Run', 'Sit', 'Get Up', 'Idle Sit', 'Idle Stand'],
         9,  # so the image changes 10 times per second, no matter the state
         #       maybe we should set it for each frame, optionally?

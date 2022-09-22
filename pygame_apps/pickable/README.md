@@ -1,5 +1,10 @@
 # Steps for creating the player
 
+- [x] create the python file collisions.py
+- [x] Create an enum which contains constants for UP, DOWN, LEFT, RIGHT
+- [x] Create a function which return the sides which collided between two rects,
+      as a set of Directions
+
 
 1. Implement a class named Player which
    inherits StatefulEntity and adds 2D

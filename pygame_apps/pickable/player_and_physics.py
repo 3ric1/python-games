@@ -40,11 +40,28 @@ class World:
     platforms: List[pygame.rect.Rect] = []
 
     @classmethod
-    def is_player_falling(cls, player: 'Player'):
+    def is_player_falling(cls, player: 'Player', dt: float):
         for platform in cls.platforms:
-            if player.bbox_rect.colliderect(platform):
+            # calculam timpul de cand cade
+            if player.t_fall is None:
+                t_fall = 0
+            else:
+                t_fall = time.time() - player.t_fall
+
+            bbox_after_a_frame = player.bbox_rect
+            bbox_after_a_frame.x += dt * player.direction[0] * player.speed[0]
+            bbox_after_a_frame.y += dt * (
+                        - player.speed[1] + Physics.falling_speed(t_fall))  # TODO don't use self.direction
+
+            if bbox_after_a_frame.colliderect(platform):
                 print('collide')
-                player.y = platform.y - player.bbox_rect.height
+
+                player.y = platform.y - player.bbox_rect.height  # 1px inside the platform
+                player.speed[1] = 0
+
+                if player.t_jump:
+                    player.t_jump = None
+                    print('STOP JUMP')
                 if player.t_fall:
                     player.t_fall = None
                     print('STOP FALLING')
@@ -91,7 +108,7 @@ class Player(StatefulEntity):
     def bbox_rect(self) -> pygame.rect.Rect:
         w, h = self.curr_texture.get_width(), self.curr_texture.get_height()
         # TODO flip the bbox inside the texture box
-        return pygame.rect.Rect(self.pos[0] + 7, self.pos[1] + 5, w - 14, h - 5)
+        return pygame.rect.Rect(self.x + 7, self.y + 5, w - 14, h)
 
     @property
     def curr_texture(self) -> pygame.Surface:
@@ -122,8 +139,8 @@ class Player(StatefulEntity):
             if 1 > dt_jump >= 0:
                 self.speed[1] = JUMP_SPEED + JUMP_SPEED * (dt_jump / 1)  # int c =  (a>b) ? a : b;
             elif 2 > dt_jump > 1:
-                self.speed[1] = 0
-                # self.speed[1] = JUMP_SPEED - (JUMP_SPEED * ((dt_jump - 1) / (2 - 1)))
+                # self.speed[1] = 0
+                self.speed[1] = JUMP_SPEED - (JUMP_SPEED * ((dt_jump - 1) / (2 - 1)))
                 # # folosim numarul de secunde din 1,2)  /   cate secunde au trecut de la secunda 1
             else:
                 self.speed[1] = 0
@@ -166,12 +183,10 @@ class Player(StatefulEntity):
         """
         # based on fall time
 
-        if World.is_player_falling(self):
+        if World.is_player_falling(self, dt):
             falling_speed = Physics.falling_speed(falling_time=time.time() - self.t_fall)
         else:
-            self.t_fall = None
             print("STOP FALLING", self.t_fall)
-
             falling_speed = 0
 
         self.pos[0] += dt * self.direction[0] * self.speed[0]
