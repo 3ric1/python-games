@@ -1,5 +1,27 @@
 # Python Turtle and OOP
 
+
+## Mini Games - Learn Classical Algorithm the Fun Way
+
+1. Torch Adventures/ Apple Warden
+
+1. Set up the game
+- [ ] create a python package at the root of the folder, named game1_warden
+  - [ ] load resources for tiles, walls, robots, apples 
+- [ ] first, the grid (20 by 20 tiles of size 32x32 pixels)
+- [ ] add obstacles and a 20 to 80 obstacle to freeway ratio
+     -- we use random from python
+- [ ] add location for three robots (randomly, but in the open spaces)
+- [ ] create the torch - the player has a x,y position and a diameter
+  of 2 tiles
+
+2. Test the Lee algorithm 
+
+3. At the beginning, all pixels are black
+
+4. In  the beginning, the entire screen will be black
+
+
 ## Teme
 
 Tema 6 august

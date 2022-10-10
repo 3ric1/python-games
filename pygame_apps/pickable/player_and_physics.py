@@ -232,12 +232,12 @@ if __name__ == '__main__':
     player.pos = [50, 80]
 
     # # background
-    # text_bg = pygame.image.load('../maze/assets/128x128/Tile/Tile_01-128x128.png').convert_alpha()
+    # text_bg = pygame.image.load('../maze/assets/128x128/Floors/Tile_01-128x128.png').convert_alpha()
     # bg = Background(text_bg, (600, 200), (50, 50)).get_bg()
     # bg.set_alpha(70)
     # # terrain
     # surf_bottom = pygame.image.load('../maze/assets/128x128/Grass/Grass_06-128x128.png')
-    # surf_top = pygame.image.load('../maze/assets/128x128/Bricks/Bricks_18-128x128.png')
+    # surf_top = pygame.image.load('../maze/assets/128x128/Walls/Bricks_18-128x128.png')
     # terrain = Terrain(surf_bottom, surf_top, 20, (40, 40)).create((550, 100))
 
     # use time passed for moving the dog using one different animations (sit, get up, walk, run)
